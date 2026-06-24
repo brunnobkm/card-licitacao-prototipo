@@ -152,6 +152,25 @@
 
   /* placeholder de campo vazio (no lugar do "-") */
   .placeholder:empty:not(:focus)::before { content: attr(data-placeholder); color: rgba(15,15,15,.4); }
+
+  /* ---- grupo de ações da propriedade (pill conectado: lápis · ↗ · copiar) ---- */
+  .prop-actions {                 /* flutua à direita no hover (não reserva espaço) */
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    display: flex; align-items: center; opacity: 0; pointer-events: none;
+    transition: opacity 120ms ease; padding-left: 28px;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, #fff 22px);
+  }
+  .prop-actions-inline { display: inline-flex; flex: none; opacity: 0; transition: opacity 120ms ease; }
+  .group:hover .prop-actions, .group:hover .prop-actions-inline { opacity: 1; pointer-events: auto; }
+  .icon-pill { display: inline-flex; align-items: center; border-radius: 8px; overflow: hidden; background: #f1f1f1; }
+  .pill-btn {
+    width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+    color: #6b6b6b; cursor: pointer; transition: background-color 120ms ease, color 120ms ease;
+  }
+  .pill-btn:hover { background: rgba(15,15,15,.09); color: #1f1f1f; }
+  .pill-btn + .pill-btn { box-shadow: inset 1px 0 0 rgba(15,15,15,.07); }
+  .pill-btn.linked { color: #16a34a; }              /* ↗ verde = tem trecho vinculado */
+  .pill-btn.linked:hover { color: #15803d; background: rgba(22,163,74,.10); }
   .popover {
     position: absolute; z-index: 80; background: #fff;
     border: 1px solid rgba(15,15,15,.08); border-radius: 10px;
@@ -246,13 +265,15 @@
 
   <!-- legenda explicativa -->
   <div class="legend max-w-[1380px] w-full flex flex-wrap items-center gap-x-5 gap-y-1">
-    <span><b>Clique em qualquer valor</b> para editar inline</span>
+    <span>Passe o mouse na propriedade → grupo de ícones</span>
     <span>·</span>
-    <span>Passe o mouse → ícone <b>copiar</b> ao lado do valor</span>
+    <span><b>✏️ Lápis</b> edita</span>
     <span>·</span>
-    <span>Clique numa <b>área vazia do card</b> → abre o edital</span>
+    <span><b>↗</b> abre o trecho no edital (verde = vinculado)</span>
     <span>·</span>
-    <span>Botões continuam funcionando normalmente</span>
+    <span><b>⧉ Copiar</b> o valor</span>
+    <span>·</span>
+    <span>Clicar no valor/card → abre o edital</span>
   </div>
 
   <!-- ===================== CARD ===================== -->
@@ -310,20 +331,38 @@
           <div class="flex flex-col gap-2 w-full">
             <div class="flex gap-2 items-center flex-wrap w-full group">
               <p class="text-[14px] leading-5 text-cardfg">
-                <span class="font-bold">Órgão:</span><span class="font-normal"> <span class="edit-target" data-type="text" data-field="orgao">EPA - PROCURADORIA GERAL DO ESTADO DO PARÁ</span></span>
+                <span class="font-bold">Órgão:</span><span class="font-normal"> <span class="prop-value" data-field="orgao" data-scope="top">EPA - PROCURADORIA GERAL DO ESTADO DO PARÁ</span></span>
               </p>
               <span id="porteChip" class="chip-edit bg-secondaryx text-secondaryfg text-[12px] font-medium leading-4 px-1.5 py-0.5 rounded-selector shrink-0" data-field="porte">ME - EPP</span>
-              <button class="copy-btn" data-copy-field="orgao" title="Copiar órgão"><i data-lucide="copy" class="size-3.5"></i></button>
+              <div class="prop-actions-inline ml-auto">
+                <div class="icon-pill">
+                  <button class="pill-btn" data-edit="orgao" data-scope="top" title="Editar"><i data-lucide="pencil" class="size-4"></i></button>
+                  <button class="pill-btn linked" data-link="orgao" data-label="Órgão" title="Ver trecho no edital"><i data-lucide="arrow-up-right" class="size-4"></i></button>
+                  <button class="pill-btn" data-copy-field="orgao" data-scope="top" title="Copiar"><i data-lucide="copy" class="size-4"></i></button>
+                </div>
+              </div>
             </div>
             <div class="flex items-start gap-2 w-full group">
               <p class="flex-1 min-w-0 text-[14px] leading-5 text-cardfg">
-                <span class="font-bold">Objeto:</span><span class="font-normal"> <span class="edit-target" data-type="textarea" data-field="objeto">Licitação para fornecimento de computadores desktop, notebooks, monitores e periféricos para atender a rede municipal de ensino. Inclui instalação, configuração e garantia de 36 meses com suporte on-site. Entrega em 47 unidades escolares.</span></span>
+                <span class="font-bold">Objeto:</span><span class="font-normal"> <span class="prop-value" data-field="objeto" data-scope="top">Licitação para fornecimento de computadores desktop, notebooks, monitores e periféricos para atender a rede municipal de ensino. Inclui instalação, configuração e garantia de 36 meses com suporte on-site. Entrega em 47 unidades escolares.</span></span>
               </p>
-              <button class="copy-btn mt-0.5" data-copy-field="objeto" title="Copiar objeto"><i data-lucide="copy" class="size-3.5"></i></button>
+              <div class="prop-actions-inline mt-0.5">
+                <div class="icon-pill">
+                  <button class="pill-btn" data-edit="objeto" data-scope="top" title="Editar"><i data-lucide="pencil" class="size-4"></i></button>
+                  <button class="pill-btn linked" data-link="objeto" data-label="Objeto" title="Ver trecho no edital"><i data-lucide="arrow-up-right" class="size-4"></i></button>
+                  <button class="pill-btn" data-copy-field="objeto" data-scope="top" title="Copiar"><i data-lucide="copy" class="size-4"></i></button>
+                </div>
+              </div>
             </div>
             <div class="flex items-center gap-2 w-full group">
-              <p class="text-[16px] font-bold leading-6 text-cardfg">Valor global: <span class="edit-target font-bold" data-type="text" data-field="valor">R$ 47.284.499,63</span></p>
-              <button class="copy-btn" data-copy-field="valor" title="Copiar valor"><i data-lucide="copy" class="size-3.5"></i></button>
+              <p class="text-[16px] font-bold leading-6 text-cardfg">Valor global: <span class="prop-value font-bold" data-field="valor" data-scope="top">R$ 47.284.499,63</span></p>
+              <div class="prop-actions-inline">
+                <div class="icon-pill">
+                  <button class="pill-btn" data-edit="valor" data-scope="top" title="Editar"><i data-lucide="pencil" class="size-4"></i></button>
+                  <button class="pill-btn linked" data-link="valor" data-label="Valor global" title="Ver trecho no edital"><i data-lucide="arrow-up-right" class="size-4"></i></button>
+                  <button class="pill-btn" data-copy-field="valor" data-scope="top" title="Copiar"><i data-lucide="copy" class="size-4"></i></button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -413,6 +452,21 @@
     select: 'Selecionar', date: 'Definir data', link: 'Adicionar link', readonly: 'Vazio',
   }[type] || 'Adicionar');
 
+  // quais propriedades têm "trecho vinculado" (verde) — extraídas de um trecho do edital
+  const LINKED_FIELDS = new Set(['orgao','objeto','valor','modalidade','julgamento','estado','cidade','envio','portal','uasg']);
+  const isLinked = (k) => LINKED_FIELDS.has(k);
+  const ic = (n) => `<i data-lucide="${n}" class="size-4"></i>`;
+
+  // grupo de ícones: lápis (se editável) · ↗ trecho vinculado · copiar
+  function pillHtml(key, label, scope, editable) {
+    const linked = isLinked(key);
+    const pencil = editable
+      ? `<button class="pill-btn" data-edit="${key}" data-scope="${scope}" title="Editar">${ic('pencil')}</button>` : '';
+    const link = `<button class="pill-btn${linked ? ' linked' : ''}" data-link="${key}" data-label="${esc(label)}" title="${linked ? 'Ver trecho no edital' : 'Vincular trecho do edital'}">${ic('arrow-up-right')}</button>`;
+    const copy = `<button class="pill-btn" data-copy-field="${key}" data-scope="${scope}" title="Copiar">${ic('copy')}</button>`;
+    return `<div class="icon-pill">${pencil}${link}${copy}</div>`;
+  }
+
   function formatByType(v, type) {
     if (type === 'currency') {
       const n = parseFloat(String(v).replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.'));
@@ -443,47 +497,18 @@
   function field(p, opts={}) {
     const valCls = COLOR_CLS[opts.color] || (opts.warn ? 'text-warning' : 'text-muted');
     const t = typeOf(p.key).type;
+    const editable = t !== 'readonly';
     const empty = isEmpty(p.value);
     const display = empty ? '' : esc(p.value);
     const ph = placeholderFor(t);
-    const labelHtml = `<span class="text-[14px] font-semibold leading-5 text-cardfg truncate">${esc(p.label)}</span>`;
-    const copyHtml = `<button class="copy-btn shrink-0" data-copy-field="${p.key}" data-scope="${opts.scope}" title="Copiar ${esc(p.label)}"><i data-lucide="copy" class="size-3.5"></i></button>`;
-
-    if (t === 'readonly') {
-      // somente leitura (gerado pelo sistema) → não edita, cadeado + tooltip explicativo
-      return `
-        <div class="prop-field group grid gap-1 min-w-0">
-          ${labelHtml}
-          <div class="flex items-center gap-1 min-w-0" data-tooltip="Essa informação não pode ser editada">
-            <span class="value-trunc placeholder text-[14px] font-normal leading-5 ${valCls} cursor-default" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}">${display}</span>
-            ${copyHtml}
-          </div>
-        </div>`;
-    }
-
-    if (t === 'link') {
-      // hyperlink clicável (abre a URL) + lápis pra editar a URL
-      const valEl = empty
-        ? `<span class="edit-target value-trunc placeholder text-[14px] font-normal leading-5 ${valCls}" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}"></span>`
-        : `<a class="link-val value-trunc text-[14px] font-normal leading-5" href="${ensureHttp(p.value)}" target="_blank" rel="noopener" data-field="${p.key}" data-scope="${opts.scope}" title="${esc(ensureHttp(p.value))}">${display}</a>`;
-      return `
-        <div class="prop-field group grid gap-1 min-w-0">
-          ${labelHtml}
-          <div class="flex items-center gap-1 min-w-0">
-            ${valEl}
-            ${empty ? '' : `<button class="link-edit shrink-0" data-edit-link="${p.key}" title="Editar link"><i data-lucide="pencil" class="size-3.5"></i></button>`}
-            ${copyHtml}
-          </div>
-        </div>`;
-    }
-
-    const pick = (t === 'select' || t === 'date') ? ' pick' : '';
+    const roTip = !editable ? ' data-tooltip="Essa informação não pode ser editada"' : '';
+    const roCursor = !editable ? ' cursor-default' : '';
     return `
       <div class="prop-field group grid gap-1 min-w-0">
-        ${labelHtml}
-        <div class="flex items-center gap-1 min-w-0">
-          <span class="edit-target value-trunc placeholder${pick} text-[14px] font-normal leading-5 ${valCls}" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}">${display}</span>
-          ${copyHtml}
+        <span class="text-[14px] font-semibold leading-5 text-cardfg truncate">${esc(p.label)}</span>
+        <div class="prop-row flex items-center min-w-0 relative"${roTip}>
+          <span class="prop-value value-trunc placeholder text-[14px] font-normal leading-5 ${valCls}${roCursor}" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}">${display}</span>
+          <div class="prop-actions">${pillHtml(p.key, p.label, opts.scope, editable)}</div>
         </div>
       </div>`;
   }
@@ -781,7 +806,7 @@
   // posicionar o cursor normalmente durante a edição).
   document.addEventListener('mousedown', (e) => {
     const tgt = e.target.closest('.edit-target');
-    if ((tgt && tgt !== editing) || e.target.closest('[data-edit-link]')) e.preventDefault();
+    if ((tgt && tgt !== editing) || e.target.closest('[data-edit]')) e.preventDefault();
   });
 
   document.addEventListener('click', (e) => {
@@ -792,7 +817,7 @@
       // clicou no mesmo anchor que estava aberto → só fecha (toggle)
       if (wasAnchor && wasAnchor.contains(e.target)) { e.stopPropagation(); return; }
       // clicou em algo não-acionável → só fecha, não navega
-      if (!e.target.closest('.edit-target, [data-btn], [data-copy-field], #selectBox, #porteChip, #segmentos')) {
+      if (!e.target.closest('.edit-target, [data-edit], [data-link], [data-btn], [data-copy-field], #selectBox, #porteChip, #segmentos')) {
         e.stopPropagation(); return;
       }
     }
@@ -814,19 +839,28 @@
     const copy = e.target.closest('[data-copy-field]');
     if (copy) { e.stopPropagation(); copyValue(copy); return; }
 
-    // 1.1) editar link (lápis) → edição inline da URL
-    const linkEdit = e.target.closest('[data-edit-link]');
-    if (linkEdit) {
+    // 1.1) lápis → habilita edição da propriedade (gatilho de edição)
+    const pencil = e.target.closest('[data-edit]');
+    if (pencil) {
       e.stopPropagation();
-      const a = linkEdit.closest('.prop-field').querySelector('.link-val, .edit-target');
-      if (a && a !== editing) { if (editing) editing.blur(); openInline(a, 'link'); }
+      if (editing) editing.blur();
+      const v = (pencil.closest('.group') || document).querySelector(`.prop-value[data-field="${pencil.dataset.edit}"]`);
+      if (v) enterEdit(v);
       return;
     }
 
-    // 1.2) clicar no link → abre a URL em nova aba (não navega o card)
-    if (e.target.closest('a.link-val')) { e.stopPropagation(); return; }
+    // 1.2) ↗ trecho vinculado → leva ao edital (simulado)
+    const link = e.target.closest('[data-link]');
+    if (link) {
+      e.stopPropagation();
+      const linked = link.classList.contains('linked');
+      toast('arrow-up-right', linked
+        ? 'Abrindo o edital no trecho de "' + link.dataset.label + '"…'
+        : 'Sem trecho vinculado para "' + link.dataset.label + '"');
+      return;
+    }
 
-    // 2) editar valor (abre o editor do tipo da propriedade)
+    // 2) título "Edital" ainda edita por clique (campo do cabeçalho)
     const tgt = e.target.closest('.edit-target');
     if (tgt) { e.stopPropagation(); if (editing && editing !== tgt) editing.blur(); if (tgt !== editing) enterEdit(tgt); return; }
 
