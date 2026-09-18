@@ -138,6 +138,8 @@
     transition: opacity 120ms ease, transform 120ms ease;
   }
   [data-tooltip]:hover::after { opacity: 1; transform: translateY(0); transition-delay: 220ms; }
+  /* quando o anchor abre um popover (showPopover adiciona .editing), o tooltip some na hora */
+  [data-tooltip].editing::after { opacity: 0 !important; transition-delay: 0ms; }
 
   /* propriedade do tipo link (URL) → hyperlink clicável */
   .link-val { color: #2563eb; cursor: pointer; text-decoration: none; }
@@ -295,7 +297,7 @@
   </div>
 
   <!-- ===================== CARD ===================== -->
-  <div id="card" class="card-clickable bg-white rounded-box w-full max-w-[1380px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+  <div id="card" data-card="multi" class="card-clickable bg-white rounded-box w-full max-w-[1380px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
 
     <!-- ---------- TOP BAR ---------- -->
     <div class="flex h-[60px] items-center justify-between gap-4 px-4 w-full">
@@ -328,7 +330,7 @@
           <button data-btn="Adicionar responsável" class="avatar-ring soft-neutral size-8 rounded-full flex items-center justify-center text-[#404040] shrink-0 transition"><i data-lucide="plus" class="size-4"></i></button>
         </div>
         <div class="vdivider"></div>
-        <button data-links="1" aria-label="Abrir edital no portal" title="Abrir edital no portal" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="globe" class="size-4"></i></button>
+        <button data-links="1" aria-label="Link do edital" data-tooltip="Link do edital" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="globe" class="size-4"></i></button>
         <div class="vdivider"></div>
         <button data-btn="Copiar link" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="link" class="size-4"></i></button>
         <button data-btn="Compartilhar" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="share-2" class="size-4"></i></button>
@@ -772,9 +774,19 @@
     });
   }
 
-  // ---- menu do globo: fontes de onde abrir o edital (lidas de state.editalLinks) ----
+  // fontes do edital do card ao qual o globo pertence (permite 2 cenários na página)
+  const editalLinksByCard = {
+    multi:  state.editalLinks,              // PNCP + BBMnet → dropdown
+    single: state.editalLinks.slice(0, 1),  // só PNCP → abre direto
+  };
+  function linksForAnchor(anchor) {
+    const c = anchor.closest('[data-card]');
+    return editalLinksByCard[c ? c.dataset.card : 'multi'] || state.editalLinks || [];
+  }
+
+  // ---- menu do globo: fontes de onde abrir o edital (por card, via linksForAnchor) ----
   function openLinksMenu(anchor) {
-    const links = state.editalLinks || [];
+    const links = linksForAnchor(anchor);
     const node = document.createElement('div');
     node.innerHTML =
       `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:rgba(15,15,15,.45);font-weight:500;padding:6px 8px 4px">Abrir o edital em</div>` +
@@ -934,11 +946,11 @@
     // 6) porte (chip)
     if (e.target.closest('#porteChip')) { e.stopPropagation(); editPorte(); return; }
 
-    // 6.5) globo → 1 fonte abre direto; 2+ abre o dropdown
+    // 6.5) globo → 1 fonte abre direto; 2+ abre o dropdown (fontes por card)
     const linksBtn = e.target.closest('[data-links]');
     if (linksBtn) {
       e.stopPropagation();
-      const links = state.editalLinks || [];
+      const links = linksForAnchor(linksBtn);
       if (links.length === 0) { toast('globe', 'Sem link do edital'); }
       else if (links.length === 1) { toast('external-link', 'Abrindo: ' + links[0].label + ' …'); }
       else { openLinksMenu(linksBtn); }
@@ -1022,8 +1034,35 @@
   // init
   renderSegmentos(); renderDatas(); renderGrid(); safeIcons();
   wireGridScroll();
-  requestAnimationFrame(adjustGridScroll);
+  requestAnimationFrame(() => { adjustGridScroll(); addSingleLinkCard(); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(adjustGridScroll);
+
+  // ---- segundo card na página: clona o principal (snapshot) e deixa só o globo do
+  //      cenário "1 link → abre direto". O card principal continua como "multi" (dropdown). ----
+  function addSingleLinkCard() {
+    if (document.querySelector('[data-card="single"]')) return;   // idempotente
+    const main = document.getElementById('card');
+    const clone = main.cloneNode(true);
+    clone.setAttribute('data-card', 'single');
+    clone.removeAttribute('id');
+    clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));   // evita ids duplicados
+    // é um snapshot só para comparar o globo: desativa a interação do corpo (mantém o header)
+    const content = clone.children[1];                                        // top bar é [0], conteúdo é [1]
+    if (content) content.style.pointerEvents = 'none';
+    const vm = clone.querySelector('.ver-mais'); if (vm) vm.hidden = true;
+
+    const label = (txt) => {
+      const d = document.createElement('div');
+      d.className = 'legend max-w-[1380px] w-full';
+      d.style.fontWeight = '600'; d.style.color = '#5a5a5a';
+      d.textContent = txt;
+      return d;
+    };
+    // insere: [rótulo single][card single] antes de [rótulo multi][card principal]
+    main.parentNode.insertBefore(label('Cenário A: 1 link no globo (abre direto)'), main);
+    main.parentNode.insertBefore(clone, main);
+    main.parentNode.insertBefore(label('Cenário B: 2+ links no globo (abre dropdown)'), main);
+  }
   </script>
 </body>
 </html>
