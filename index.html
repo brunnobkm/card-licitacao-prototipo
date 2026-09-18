@@ -211,7 +211,7 @@
     cursor: pointer; font-size: 13px; color: #1f1f1f; user-select: none;
   }
   .pop-item:hover { background: rgba(15,15,15,.05); }
-  .pop-item:hover .link-out { color: #16a34a; }   /* seta de abrir em outra página fica verde no hover */
+  .link-out { color: #3A9B9E; }   /* seta de "abrir link do edital em outra página" no verde da marca */
   .pop-item .check { margin-left: auto; opacity: 0; color: #3A9B9E; display: inline-flex; }
   .pop-item.selected .check { opacity: 1; }
   .pop-empty { padding: 10px 8px; font-size: 13px; color: rgba(15,15,15,.4); text-align: center; }
@@ -319,27 +319,22 @@
         <button data-btn="Descartar" class="bg-secondaryx border border-secondaryx text-secondaryfg text-[14px] font-medium leading-5 px-3 py-1.5 rounded-field hover:brightness-[0.97] transition">Descartar</button>
         <button data-btn="Enviar para análise" class="bg-accent text-primaryfg text-[14px] font-medium leading-5 px-3 py-1.5 rounded-field hover:brightness-95 transition">Enviar para análise</button>
         <div class="vdivider"></div>
-        <button data-btn="Em disputa ou Homologação" class="soft-warning text-warning text-[14px] font-medium leading-5 flex gap-1.5 items-center px-3 py-1.5 rounded-field transition">
-          <i data-lucide="pencil" class="size-4"></i> Em disputa ou Homologação
-        </button>
-        <div class="vdivider"></div>
         <div class="flex items-center pr-2.5">
           <div class="avatar-ring size-8 rounded-full overflow-hidden -mr-2.5 flex items-center justify-center text-white text-[11px] font-semibold" style="background:#c97b5a;">A</div>
           <div class="avatar-ring size-8 rounded-full overflow-hidden -mr-2.5 flex items-center justify-center text-white text-[11px] font-semibold" style="background:#5a8cc9;">M</div>
           <div class="avatar-ring size-8 rounded-full overflow-hidden -mr-2.5 flex items-center justify-center text-white text-[11px] font-semibold" style="background:#6aa46a;">R</div>
-          <button data-btn="Adicionar responsável" class="avatar-ring soft-neutral size-8 rounded-full flex items-center justify-center text-[#404040] shrink-0 transition"><i data-lucide="plus" class="size-4"></i></button>
+          <button data-btn="Adicionar responsável" aria-label="Adicionar responsável" data-tooltip="Adicionar responsável" class="avatar-ring soft-neutral size-8 rounded-full flex items-center justify-center text-[#404040] shrink-0 transition"><i data-lucide="plus" class="size-4"></i></button>
         </div>
         <div class="vdivider"></div>
-        <button data-btn="Salvar para depois" aria-label="Salvar para depois" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="bookmark" class="size-4"></i></button>
         <button data-links="1" aria-label="Link do edital" data-tooltip="Link do edital" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="globe" class="size-4"></i></button>
         <div class="vdivider"></div>
-        <button data-btn="Copiar link" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="link" class="size-4"></i></button>
-        <button data-btn="Compartilhar" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="share-2" class="size-4"></i></button>
-        <button data-btn="Documentos" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="file-text" class="size-4"></i></button>
-        <button data-btn="Arquivos" aria-label="Arquivos" class="soft-icon size-8 rounded-field flex items-center justify-center transition relative"><i data-lucide="folder" class="size-4"></i><span class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#3A9B9E] text-white text-[10px] font-semibold leading-4 text-center">4</span></button>
+        <button data-btn="Salvar para depois" aria-label="Salvar para depois" data-tooltip="Salvar para depois" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="bookmark" class="size-4"></i></button>
+        <button data-btn="Copiar link" aria-label="Copiar link" data-tooltip="Copiar link" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="link" class="size-4"></i></button>
+        <button data-btn="Compartilhar" aria-label="Compartilhar" data-tooltip="Compartilhar" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="share-2" class="size-4"></i></button>
+        <button data-btn="Documentos" aria-label="Documentos" data-tooltip="Documentos" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="file-text" class="size-4"></i></button>
+        <button data-btn="Arquivos" aria-label="Arquivos" data-tooltip="Arquivos" class="soft-icon size-8 rounded-field flex items-center justify-center transition relative"><i data-lucide="folder" class="size-4"></i><span class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#3A9B9E] text-white text-[10px] font-semibold leading-4 text-center">4</span></button>
         <div class="vdivider"></div>
-        <button data-btn="Checklist" aria-label="Checklist" class="soft-neutral flex gap-1.5 items-center text-secondaryfg text-[14px] font-medium leading-5 px-3 py-1.5 rounded-field transition"><i data-lucide="list-checks" class="size-4"></i> Checklist</button>
-        <span data-tooltip="Score Quente" class="score-badge inline-flex items-center gap-1.5 h-[26px] px-2.5 rounded-full text-[13px] font-semibold shrink-0 cursor-default" style="background:#dcfce7;color:#15803d"><i data-lucide="gauge" class="size-4"></i> 80/100</span>
+        <span data-tooltip="Score Quente" class="score-badge inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-semibold shrink-0 cursor-default" style="background:#dcfce7;color:#15803d"><i data-lucide="gauge" class="size-4"></i> 80/100</span>
       </div>
     </div>
 
@@ -800,7 +795,7 @@
       links.map(l => `
         <div class="pop-item" data-openlink="${esc(l.label)}">
           <span>${esc(l.label)}</span>
-          <i data-lucide="external-link" class="link-out size-3.5" style="margin-left:auto;color:rgba(15,15,15,.35);flex:none"></i>
+          <i data-lucide="external-link" class="link-out size-3.5" style="margin-left:auto;flex:none"></i>
         </div>`).join('');
     const pop = showPopover(anchor, node, { minWidth: 264 });
     safeIcons();
