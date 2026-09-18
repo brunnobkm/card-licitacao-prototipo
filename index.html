@@ -440,6 +440,13 @@
       { key:'consorcio',      label:'Possibilidade de consórcio', value:'Não' },
       { key:'prazoimpugnacao',label:'Prazo de impugnação',        value:'3 dias úteis antes da data de abertura do certame' },
       { key:'localentrega',   label:'Local de entrega',           value:'Secretaria Municipal de Educação, Av. Presidente Vargas, 1200, Centro, Belém - PA, CEP 66017-000' },
+      // placeholders só para o grid transbordar e demonstrar o scroll / "Ver mais"
+      { key:'extra1', label:'Propriedade adicional 1', value:'Lorem ipsum dolor' },
+      { key:'extra2', label:'Propriedade adicional 2', value:'Sit amet consectetur' },
+      { key:'extra3', label:'Propriedade adicional 3', value:'Adipiscing elit' },
+      { key:'extra4', label:'Propriedade adicional 4', value:'Vivamus lacinia odio' },
+      { key:'extra5', label:'Propriedade adicional 5', value:'Sed do eiusmod' },
+      { key:'extra6', label:'Propriedade adicional 6', value:'Tempor incididunt' },
     ],
     // Fontes de onde ABRIR o edital (o que o ícone de globo do header oferece).
     // ATENÇÃO: isto é diferente da propriedade "Portal de disputa" do grid (state.props → portal),
@@ -599,7 +606,7 @@
   function renderGrid() {
     // 'locacao' e 'prazoimpugnacao' são OPCIONAIS: só aparecem se ligados em state.checklistConfig
     // (viriam das Configurações). Os demais são sempre visíveis.
-    const base = ['id','julgamento','portal','estado','capagest','modalidade','uasg','cidade','capagmun','habitantes','nova','locacao','amostra','consorcio','prazoimpugnacao','localentrega'];
+    const base = ['id','julgamento','portal','estado','capagest','modalidade','uasg','cidade','capagmun','habitantes','nova','locacao','amostra','consorcio','prazoimpugnacao','localentrega','extra1','extra2','extra3','extra4','extra5','extra6'];
     const order = base.filter(k => (k in state.checklistConfig) ? state.checklistConfig[k] : true);
     const byKey = Object.fromEntries(state.props.map(p => [p.key, p]));
     const html = order.map(k => field(byKey[k], {scope:'props'})).join('');
