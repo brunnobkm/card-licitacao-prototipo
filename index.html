@@ -330,12 +330,16 @@
           <button data-btn="Adicionar responsável" class="avatar-ring soft-neutral size-8 rounded-full flex items-center justify-center text-[#404040] shrink-0 transition"><i data-lucide="plus" class="size-4"></i></button>
         </div>
         <div class="vdivider"></div>
+        <button data-btn="Salvar para depois" aria-label="Salvar para depois" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="bookmark" class="size-4"></i></button>
         <button data-links="1" aria-label="Link do edital" data-tooltip="Link do edital" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="globe" class="size-4"></i></button>
         <div class="vdivider"></div>
         <button data-btn="Copiar link" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="link" class="size-4"></i></button>
         <button data-btn="Compartilhar" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="share-2" class="size-4"></i></button>
         <button data-btn="Documentos" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="file-text" class="size-4"></i></button>
-        <button data-btn="Arquivos" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="folder" class="size-4"></i></button>
+        <button data-btn="Arquivos" aria-label="Arquivos" class="soft-icon size-8 rounded-field flex items-center justify-center transition relative"><i data-lucide="folder" class="size-4"></i><span class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#3A9B9E] text-white text-[10px] font-semibold leading-4 text-center">4</span></button>
+        <div class="vdivider"></div>
+        <button data-btn="Checklist" aria-label="Checklist" class="soft-neutral flex gap-1.5 items-center text-secondaryfg text-[14px] font-medium leading-5 px-3 py-1.5 rounded-field transition"><i data-lucide="list-checks" class="size-4"></i> Checklist</button>
+        <span data-tooltip="Score Quente" class="score-badge inline-flex items-center gap-1.5 h-[26px] px-2.5 rounded-full text-[13px] font-semibold shrink-0 cursor-default" style="background:#dcfce7;color:#15803d"><i data-lucide="gauge" class="size-4"></i> 80/100</span>
       </div>
     </div>
 
@@ -390,12 +394,12 @@
 
       <!-- (3) Linha inferior — grid externo: datas (auto) + informações (minmax(0,1fr), min-w-0) -->
       <div class="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] items-start w-full">
-        <div id="datesCard" class="border border-borderx rounded-box p-4">
+        <div id="datesCard" class="js-dates border border-borderx rounded-box p-4">
           <div id="datas" class="flex gap-8 items-start"></div>
         </div>
-        <div id="gridCard" class="border border-borderx rounded-box p-4 min-w-0 relative">
+        <div id="gridCard" class="js-grid-card border border-borderx rounded-box p-4 min-w-0 relative">
           <!-- área rolável (altura = card de datas ao lado) -->
-          <div id="gridScroll">
+          <div id="gridScroll" class="js-grid-scroll">
             <!-- grid interno responsivo: sm:2 · md:3 · xl:5 colunas (1fr cada) -->
             <div id="grid" class="grid gap-x-4 gap-y-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5"></div>
           </div>
@@ -960,6 +964,9 @@
       return;
     }
 
+    // 6.9) badge de score → só visual, não navega nem abre painel
+    if (e.target.closest('.score-badge')) { e.stopPropagation(); return; }
+
     // 7) botões → mantêm função, não navegam
     const btn = e.target.closest('[data-btn]');
     if (btn) { e.stopPropagation(); toast('check', btn.dataset.btn); return; }
@@ -991,23 +998,25 @@
   })();
 
   // ---------------- escalabilidade do card de propriedades ----------------
-  let verMaisDismissed = false;
-  function dismissVerMais() {
-    if (verMaisDismissed) return;
-    verMaisDismissed = true;
-    const vm = document.getElementById('verMais');
-    if (vm) vm.hidden = true;
+  // Scroll + "Ver mais" escopados por card (funciona no principal E no clone).
+  // Usa classes internas (.js-dates / .js-grid-card / .js-grid-scroll / .ver-mais) porque
+  // os ids são removidos do clone; o estado "dismissed" fica no dataset do próprio .ver-mais.
+  function dismissVerMaisIn(card) {
+    const vm = card.querySelector('.ver-mais');
+    if (!vm || vm.dataset.dismissed) return;
+    vm.dataset.dismissed = '1';
+    vm.hidden = true;
   }
-  function updateVerMais() {
-    const vm = document.getElementById('verMais');
-    const gs = document.getElementById('gridScroll');
+  function updateVerMaisIn(card) {
+    const vm = card.querySelector('.ver-mais');
+    const gs = card.querySelector('.js-grid-scroll');
     if (!vm || !gs) return;
-    if (verMaisDismissed || window.innerWidth < 768) { vm.hidden = true; return; }
+    if (vm.dataset.dismissed || window.innerWidth < 768) { vm.hidden = true; return; }
     vm.hidden = !((gs.scrollHeight - gs.clientHeight) > 4);   // só aparece se sobra conteúdo
   }
-  function adjustGridScroll() {
-    const dates = document.getElementById('datesCard');
-    const gs = document.getElementById('gridScroll');
+  function adjustGridScrollIn(card) {
+    const dates = card.querySelector('.js-dates');
+    const gs = card.querySelector('.js-grid-scroll');
     if (!dates || !gs) return;
     if (window.innerWidth >= 768) {
       // altura útil = card de datas ao lado, menos o padding do card (p-4 = 16px em cima/baixo)
@@ -1017,28 +1026,37 @@
       gs.style.maxHeight = '';
       gs.classList.remove('grid-scroll');
     }
-    updateVerMais();
+    updateVerMaisIn(card);
   }
-  function wireGridScroll() {
-    const card = document.getElementById('gridCard');
-    const gs = document.getElementById('gridScroll');
-    const vm = document.getElementById('verMais');
-    if (!card || !gs || !vm) return;
-    vm.addEventListener('click', () => {
-      gs.scrollBy({ top: 56, behavior: 'smooth' });   // rola ~uma linha de propriedade
-      dismissVerMais();
+  function wireGridScrollIn(card) {
+    const gridCard = card.querySelector('.js-grid-card');
+    const gs = card.querySelector('.js-grid-scroll');
+    const vm = card.querySelector('.ver-mais');
+    if (!gridCard || !gs || !vm || vm.dataset.wired) return;
+    vm.dataset.wired = '1';
+    vm.addEventListener('click', (e) => {
+      e.stopPropagation();                              // não navega o card
+      gs.scrollBy({ top: 56, behavior: 'smooth' });     // rola ~uma linha de propriedade
+      dismissVerMaisIn(card);
     });
     // primeiro scroll manual (em qualquer ponto do card, inclusive sobre o texto/barra) esconde de vez
-    card.addEventListener('wheel', dismissVerMais, { passive: true });
-    gs.addEventListener('scroll', dismissVerMais);
-    window.addEventListener('resize', adjustGridScroll);
+    gridCard.addEventListener('wheel', () => dismissVerMaisIn(card), { passive: true });
+    gs.addEventListener('scroll', () => dismissVerMaisIn(card));
   }
+  const allCards = () => document.querySelectorAll('[data-card]');
+  const adjustAllGrids = () => allCards().forEach(adjustGridScrollIn);
+  const wireAllGrids   = () => allCards().forEach(wireGridScrollIn);
 
   // init
   renderSegmentos(); renderDatas(); renderGrid(); safeIcons();
-  wireGridScroll();
-  requestAnimationFrame(() => { adjustGridScroll(); addSingleLinkCard(); });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(adjustGridScroll);
+  requestAnimationFrame(() => {
+    adjustGridScrollIn(document.getElementById('card'));   // ajusta o principal antes de clonar
+    addSingleLinkCard();                                    // cria o Cenário A
+    wireAllGrids();                                         // liga scroll/Ver mais nos dois
+    adjustAllGrids();                                       // ajusta os dois
+  });
+  window.addEventListener('resize', adjustAllGrids);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(adjustAllGrids);
 
   // ---- segundo card na página: clona o principal (snapshot) e deixa só o globo do
   //      cenário "1 link → abre direto". O card principal continua como "multi" (dropdown). ----
@@ -1049,10 +1067,8 @@
     clone.setAttribute('data-card', 'single');
     clone.removeAttribute('id');
     clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));   // evita ids duplicados
-    // é um snapshot só para comparar o globo: desativa a interação do corpo (mantém o header)
-    const content = clone.children[1];                                        // top bar é [0], conteúdo é [1]
-    if (content) content.style.pointerEvents = 'none';
-    const vm = clone.querySelector('.ver-mais'); if (vm) vm.hidden = true;
+    // scroll/Ver mais do clone são ligados por wireAllGrids()/adjustAllGrids() (via classes .js-*).
+    // Edição inline e popovers seguem compartilhando o state global (ok pro escopo).
 
     const label = (txt) => {
       const d = document.createElement('div');
