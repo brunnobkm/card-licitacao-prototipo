@@ -187,6 +187,23 @@
   .pop-scroll { max-height: 240px; overflow-y: auto; }
   .pop-scroll::-webkit-scrollbar { width: 8px; }
   .pop-scroll::-webkit-scrollbar-thumb { background: rgba(15,15,15,.15); border-radius: 4px; }
+
+  /* card de propriedades: área rolável com barra sempre visível (altura fixada por JS) */
+  .grid-scroll { overflow-y: scroll; }
+  .grid-scroll::-webkit-scrollbar { width: 8px; }
+  .grid-scroll::-webkit-scrollbar-thumb { background: rgba(15,15,15,.15); border-radius: 4px; }
+  .grid-scroll::-webkit-scrollbar-track { background: transparent; }
+  /* dica "Ver mais" — sobreposta ao rodapé do card, com fade */
+  .ver-mais {
+    position: absolute; left: 0; right: 9px; bottom: 0;
+    padding: 22px 16px 10px; text-align: left;
+    font-size: 13px; font-weight: 500; color: #3A9B9E; cursor: pointer;
+    background: linear-gradient(to top, #fff 55%, rgba(255,255,255,0));
+    user-select: none;
+  }
+  .ver-mais::after { content: ' ↓'; }
+  .ver-mais[hidden] { display: none; }
+  .ver-mais:hover { color: #2f7d80; }
   .pop-item {
     display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px;
     cursor: pointer; font-size: 13px; color: #1f1f1f; user-select: none;
@@ -369,13 +386,18 @@
       </div>
 
       <!-- (3) Linha inferior — grid externo: datas (auto) + informações (minmax(0,1fr), min-w-0) -->
-      <div class="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] w-full">
-        <div class="border border-borderx rounded-box p-4">
+      <div class="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] items-start w-full">
+        <div id="datesCard" class="border border-borderx rounded-box p-4">
           <div id="datas" class="flex gap-8 items-start"></div>
         </div>
-        <div class="border border-borderx rounded-box p-4 min-w-0">
-          <!-- grid interno responsivo: sm:2 colunas · xl:5 colunas (1fr cada) -->
-          <div id="grid" class="grid gap-x-4 gap-y-2 sm:grid-cols-2 xl:grid-cols-5"></div>
+        <div id="gridCard" class="border border-borderx rounded-box p-4 min-w-0 relative">
+          <!-- área rolável (altura = card de datas ao lado) -->
+          <div id="gridScroll">
+            <!-- grid interno responsivo: sm:2 · md:3 · xl:5 colunas (1fr cada) -->
+            <div id="grid" class="grid gap-x-4 gap-y-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5"></div>
+          </div>
+          <!-- dica de primeira visita (some ao rolar) -->
+          <div id="verMais" class="ver-mais" hidden>Ver mais</div>
         </div>
       </div>
 
@@ -405,13 +427,18 @@
       { key:'modalidade',label:'Modalidade',        value:'Pregão - Eletrônico' },
       { key:'julgamento',label:'Julgamento',        value:'Menor preço por item' },
       { key:'uasg',      label:'UASG',              value:'-' },
-      { key:'portal',    label:'Portal de disputa', value:'compras.saobernardo.sp.gov.br/edital/90001-2026' },
+      { key:'portal',    label:'Portal de disputa', value:'Compras Governamentais' },
       { key:'cidade',    label:'Cidade',            value:'Belém' },
       { key:'estado',    label:'Estado',            value:'PA' },
       { key:'capagmun',  label:'CAPAG Municipal',   value:'-' },
       { key:'capagest',  label:'CAPAG Estadual',    value:'-' },
       { key:'habitantes',label:'Habitantes',        value:'1.303.403' },
       { key:'nova',      label:'Nova propriedade',  value:'Variable' },
+      { key:'locacao',        label:'Locação x Aquisição',        value:'Aquisição' },
+      { key:'amostra',        label:'Requerimento de amostra',    value:'Não' },
+      { key:'consorcio',      label:'Possibilidade de consórcio', value:'Não' },
+      { key:'prazoimpugnacao',label:'Prazo de impugnação',        value:'3 dias úteis antes da data de abertura do certame' },
+      { key:'localentrega',   label:'Local de entrega',           value:'Secretaria Municipal de Educação, Av. Presidente Vargas, 1200, Centro, Belém - PA, CEP 66017-000' },
     ],
   };
 
@@ -444,6 +471,10 @@
     estado:{type:'select', options:UFS, search:true},
     capagmun:{type:'select', options:CAPAG}, capagest:{type:'select', options:CAPAG},
     portal:{type:'text'}, cidade:{type:'select', options:()=>cidadesDoEstado(getEstadoUF()), search:true}, nova:{type:'text'},
+    locacao:{type:'select', options:['Locação','Aquisição']},
+    amostra:{type:'select', options:['Sim','Não']},
+    consorcio:{type:'select', options:['Sim','Não']},
+    prazoimpugnacao:{type:'text'}, localentrega:{type:'text'},
   };
   const typeOf = (key) => (FIELD_TYPES[key] || { type: 'text' });
   const isEmpty = (v) => v == null || v === '' || v === '-' || v === '—';
@@ -453,7 +484,7 @@
   }[type] || 'Adicionar');
 
   // quais propriedades têm "trecho vinculado" (verde) — extraídas de um trecho do edital
-  const LINKED_FIELDS = new Set(['orgao','objeto','valor','modalidade','julgamento','estado','cidade','envio','portal','uasg']);
+  const LINKED_FIELDS = new Set(['orgao','objeto','valor','modalidade','julgamento','estado','cidade','envio','portal','uasg','locacao','amostra','consorcio','prazoimpugnacao','localentrega']);
   const isLinked = (k) => LINKED_FIELDS.has(k);
   const ic = (n) => `<i data-lucide="${n}" class="size-4"></i>`;
 
@@ -503,11 +534,13 @@
     const ph = placeholderFor(t);
     const roTip = !editable ? ' data-tooltip="Essa informação não pode ser editada"' : '';
     const roCursor = !editable ? ' cursor-default' : '';
+    // valores longos: expõe o texto inteiro no hover (nativo), já que o .value-trunc corta
+    const titleAttr = (!empty && String(p.value).length > 24) ? ` title="${esc(p.value)}"` : '';
     return `
       <div class="prop-field group grid gap-1 min-w-0">
         <span class="text-[14px] font-semibold leading-5 text-cardfg truncate">${esc(p.label)}</span>
         <div class="prop-row flex items-center min-w-0 relative"${roTip}>
-          <span class="prop-value value-trunc placeholder text-[14px] font-normal leading-5 ${valCls}${roCursor}" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}">${display}</span>
+          <span class="prop-value value-trunc placeholder text-[14px] font-normal leading-5 ${valCls}${roCursor}" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}"${titleAttr}>${display}</span>
           <div class="prop-actions">${pillHtml(p.key, p.label, opts.scope, editable)}</div>
         </div>
       </div>`;
@@ -537,7 +570,7 @@
   function renderGrid() {
     const el = document.getElementById('grid');
     // ordem row-major: em xl (5 col) cai 5+5+1; a coluna fica = par cima/baixo do Figma
-    const order = ['id','julgamento','portal','estado','capagest','modalidade','uasg','cidade','capagmun','habitantes','nova'];
+    const order = ['id','julgamento','portal','estado','capagest','modalidade','uasg','cidade','capagmun','habitantes','nova','locacao','amostra','consorcio','prazoimpugnacao','localentrega'];
     const byKey = Object.fromEntries(state.props.map(p => [p.key, p]));
     el.innerHTML = order.map(k => field(byKey[k], {scope:'props'})).join('');
     safeIcons();
@@ -900,8 +933,55 @@
     if (envio) envio.value = fmt(d);
   })();
 
+  // ---------------- escalabilidade do card de propriedades ----------------
+  let verMaisDismissed = false;
+  function dismissVerMais() {
+    if (verMaisDismissed) return;
+    verMaisDismissed = true;
+    const vm = document.getElementById('verMais');
+    if (vm) vm.hidden = true;
+  }
+  function updateVerMais() {
+    const vm = document.getElementById('verMais');
+    const gs = document.getElementById('gridScroll');
+    if (!vm || !gs) return;
+    if (verMaisDismissed || window.innerWidth < 768) { vm.hidden = true; return; }
+    vm.hidden = !((gs.scrollHeight - gs.clientHeight) > 4);   // só aparece se sobra conteúdo
+  }
+  function adjustGridScroll() {
+    const dates = document.getElementById('datesCard');
+    const gs = document.getElementById('gridScroll');
+    if (!dates || !gs) return;
+    if (window.innerWidth >= 768) {
+      // altura útil = card de datas ao lado, menos o padding do card (p-4 = 16px em cima/baixo)
+      gs.style.maxHeight = Math.max(72, dates.clientHeight - 32) + 'px';
+      gs.classList.add('grid-scroll');
+    } else {
+      gs.style.maxHeight = '';
+      gs.classList.remove('grid-scroll');
+    }
+    updateVerMais();
+  }
+  function wireGridScroll() {
+    const card = document.getElementById('gridCard');
+    const gs = document.getElementById('gridScroll');
+    const vm = document.getElementById('verMais');
+    if (!card || !gs || !vm) return;
+    vm.addEventListener('click', () => {
+      gs.scrollBy({ top: 56, behavior: 'smooth' });   // rola ~uma linha de propriedade
+      dismissVerMais();
+    });
+    // primeiro scroll manual (em qualquer ponto do card, inclusive sobre o texto/barra) esconde de vez
+    card.addEventListener('wheel', dismissVerMais, { passive: true });
+    gs.addEventListener('scroll', dismissVerMais);
+    window.addEventListener('resize', adjustGridScroll);
+  }
+
   // init
   renderSegmentos(); renderDatas(); renderGrid(); safeIcons();
+  wireGridScroll();
+  requestAnimationFrame(adjustGridScroll);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(adjustGridScroll);
   </script>
 </body>
 </html>
