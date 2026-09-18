@@ -440,6 +440,15 @@
       { key:'prazoimpugnacao',label:'Prazo de impugnação',        value:'3 dias úteis antes da data de abertura do certame' },
       { key:'localentrega',   label:'Local de entrega',           value:'Secretaria Municipal de Educação, Av. Presidente Vargas, 1200, Centro, Belém - PA, CEP 66017-000' },
     ],
+    // Fontes de onde ABRIR o edital (o que o ícone de globo do header oferece).
+    // ATENÇÃO: isto é diferente da propriedade "Portal de disputa" do grid (state.props → portal),
+    // que só nomeia em qual portal a DISPUTA acontece. Aqui ficam os locais/plataformas onde o
+    // edital em si pode ser acessado. Com 1 fonte → clique abre direto; com 2+ → dropdown.
+    // (BBMnet está aqui só para simular o cenário de múltiplas fontes; remova para testar 1 só.)
+    editalLinks: [
+      { label:'PNCP',   sub:'Portal Nacional de Contratações Públicas', icon:'globe' },
+      { label:'BBMnet', sub:'plataforma de licitações',                 icon:'globe' },
+    ],
   };
 
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -762,19 +771,13 @@
     });
   }
 
-  // ---- menu do globo: vários links de onde acessar o edital (simulado) ----
-  const EDITAL_LINKS = [
-    { label:'Portal de disputa', sub:'Compras Governamentais', icon:'gavel' },
-    { label:'Edital completo', sub:'documento em PDF', icon:'file-text' },
-    { label:'Página do órgão', sub:'EPA · PGE-PA', icon:'landmark' },
-    { label:'Diário Oficial', sub:'publicação do aviso', icon:'newspaper' },
-    { label:'PNCP', sub:'Portal Nacional de Contratações Públicas', icon:'globe' },
-  ];
+  // ---- menu do globo: fontes de onde abrir o edital (lidas de state.editalLinks) ----
   function openLinksMenu(anchor) {
+    const links = state.editalLinks || [];
     const node = document.createElement('div');
     node.innerHTML =
       `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:rgba(15,15,15,.45);font-weight:500;padding:6px 8px 4px">Abrir o edital em</div>` +
-      EDITAL_LINKS.map(l => `
+      links.map(l => `
         <div class="pop-item" data-openlink="${esc(l.label)}">
           <i data-lucide="${l.icon}" class="size-4 shrink-0" style="color:#6b6b6b"></i>
           <span style="display:flex;flex-direction:column;line-height:1.25;min-width:0">
@@ -934,9 +937,16 @@
     // 6) porte (chip)
     if (e.target.closest('#porteChip')) { e.stopPropagation(); editPorte(); return; }
 
-    // 6.5) globo → menu com vários links do edital
+    // 6.5) globo → 1 fonte abre direto; 2+ abre o dropdown
     const linksBtn = e.target.closest('[data-links]');
-    if (linksBtn) { e.stopPropagation(); openLinksMenu(linksBtn); return; }
+    if (linksBtn) {
+      e.stopPropagation();
+      const links = state.editalLinks || [];
+      if (links.length === 0) { toast('globe', 'Sem link do edital'); }
+      else if (links.length === 1) { toast('external-link', 'Abrindo: ' + links[0].label + ' …'); }
+      else { openLinksMenu(linksBtn); }
+      return;
+    }
 
     // 7) botões → mantêm função, não navegam
     const btn = e.target.closest('[data-btn]');
