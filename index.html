@@ -327,7 +327,7 @@
           <button data-btn="Adicionar responsável" class="avatar-ring soft-neutral size-8 rounded-full flex items-center justify-center text-[#404040] shrink-0 transition"><i data-lucide="plus" class="size-4"></i></button>
         </div>
         <div class="vdivider"></div>
-        <button data-btn="Abrir edital no portal" aria-label="Abrir edital no portal" title="Abrir edital no portal" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="globe" class="size-4"></i></button>
+        <button data-links="1" aria-label="Abrir edital no portal" title="Abrir edital no portal" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="globe" class="size-4"></i></button>
         <div class="vdivider"></div>
         <button data-btn="Copiar link" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="link" class="size-4"></i></button>
         <button data-btn="Compartilhar" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="share-2" class="size-4"></i></button>
@@ -762,6 +762,37 @@
     });
   }
 
+  // ---- menu do globo: vários links de onde acessar o edital (simulado) ----
+  const EDITAL_LINKS = [
+    { label:'Portal de disputa', sub:'Compras Governamentais', icon:'gavel' },
+    { label:'Edital completo', sub:'documento em PDF', icon:'file-text' },
+    { label:'Página do órgão', sub:'EPA · PGE-PA', icon:'landmark' },
+    { label:'Diário Oficial', sub:'publicação do aviso', icon:'newspaper' },
+    { label:'PNCP', sub:'Portal Nacional de Contratações Públicas', icon:'globe' },
+  ];
+  function openLinksMenu(anchor) {
+    const node = document.createElement('div');
+    node.innerHTML =
+      `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:rgba(15,15,15,.45);font-weight:500;padding:6px 8px 4px">Abrir o edital em</div>` +
+      EDITAL_LINKS.map(l => `
+        <div class="pop-item" data-openlink="${esc(l.label)}">
+          <i data-lucide="${l.icon}" class="size-4 shrink-0" style="color:#6b6b6b"></i>
+          <span style="display:flex;flex-direction:column;line-height:1.25;min-width:0">
+            <span>${esc(l.label)}</span>
+            <span style="font-size:11px;color:rgba(15,15,15,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l.sub)}</span>
+          </span>
+          <i data-lucide="external-link" class="size-3.5" style="margin-left:auto;color:rgba(15,15,15,.35);flex:none"></i>
+        </div>`).join('');
+    const pop = showPopover(anchor, node, { minWidth: 264 });
+    safeIcons();
+    pop.addEventListener('click', (e) => {
+      const it = e.target.closest('[data-openlink]');
+      if (!it) return;
+      toast('external-link', 'Abrindo: ' + it.dataset.openlink + ' …');
+      closeAllPopovers();
+    });
+  }
+
   // ---- editor DATA (calendário) ----
   function parseBR(s) { const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec((s||'').trim()); return m ? { d:+m[1], mo:+m[2]-1, y:+m[3] } : null; }
   function openDate(anchor, onPick) {
@@ -850,7 +881,7 @@
       // clicou no mesmo anchor que estava aberto → só fecha (toggle)
       if (wasAnchor && wasAnchor.contains(e.target)) { e.stopPropagation(); return; }
       // clicou em algo não-acionável → só fecha, não navega
-      if (!e.target.closest('.edit-target, [data-edit], [data-link], [data-btn], [data-copy-field], #selectBox, #porteChip, #segmentos')) {
+      if (!e.target.closest('.edit-target, [data-edit], [data-link], [data-links], [data-btn], [data-copy-field], #selectBox, #porteChip, #segmentos')) {
         e.stopPropagation(); return;
       }
     }
@@ -902,6 +933,10 @@
 
     // 6) porte (chip)
     if (e.target.closest('#porteChip')) { e.stopPropagation(); editPorte(); return; }
+
+    // 6.5) globo → menu com vários links do edital
+    const linksBtn = e.target.closest('[data-links]');
+    if (linksBtn) { e.stopPropagation(); openLinksMenu(linksBtn); return; }
 
     // 7) botões → mantêm função, não navegam
     const btn = e.target.closest('[data-btn]');
