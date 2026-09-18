@@ -195,6 +195,16 @@
   .grid-scroll::-webkit-scrollbar { width: 8px; }
   .grid-scroll::-webkit-scrollbar-thumb { background: rgba(15,15,15,.15); border-radius: 4px; }
   .grid-scroll::-webkit-scrollbar-track { background: transparent; }
+
+  /* grid de propriedades responsivo pela LARGURA DO CARD (container query), não da viewport */
+  .js-grid-card { container-type: inline-size; container-name: meta-info; }
+  .js-grid { grid-template-columns: repeat(1, minmax(0,1fr)); }
+  @container meta-info (min-width: 24rem) {
+    .js-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
+  @container meta-info (min-width: 48rem) {
+    .js-grid { grid-template-columns: repeat(5, minmax(0,1fr)); }
+  }
   /* dica "Ver mais" — sobreposta ao rodapé do card, com fade */
   .ver-mais {
     position: absolute; left: 0; right: 9px; bottom: 0;
@@ -331,10 +341,10 @@
         <button data-btn="Salvar para depois" aria-label="Salvar para depois" data-tooltip="Salvar para depois" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="bookmark" class="size-4"></i></button>
         <button data-btn="Copiar link" aria-label="Copiar link" data-tooltip="Copiar link" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="link" class="size-4"></i></button>
         <button data-btn="Compartilhar" aria-label="Compartilhar" data-tooltip="Compartilhar" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="share-2" class="size-4"></i></button>
-        <button data-btn="Documentos" aria-label="Documentos" data-tooltip="Documentos" class="soft-icon size-8 rounded-field flex items-center justify-center transition"><i data-lucide="file-text" class="size-4"></i></button>
         <button data-btn="Arquivos" aria-label="Arquivos" data-tooltip="Arquivos" class="soft-icon size-8 rounded-field flex items-center justify-center transition relative"><i data-lucide="folder" class="size-4"></i><span class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#3A9B9E] text-white text-[10px] font-semibold leading-4 text-center">4</span></button>
+        <button data-btn="Checklist" aria-label="Checklist" data-tooltip="Checklist" class="soft-icon h-8 px-3 rounded-field flex items-center gap-1.5 text-[13px] font-medium transition"><i data-lucide="list-checks" class="size-4"></i>Checklist</button>
         <div class="vdivider"></div>
-        <span data-tooltip="Score Quente" class="score-badge inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-semibold shrink-0 cursor-default" style="background:#dcfce7;color:#15803d"><i data-lucide="gauge" class="size-4"></i> 80/100</span>
+        <span data-tooltip="Score Quente" class="score-badge inline-flex items-center gap-1.5 h-8 px-2.5 rounded-field text-[13px] font-semibold shrink-0 cursor-default" style="background:#dcfce7;color:#15803d"><i data-lucide="gauge" class="size-4"></i> 80/100</span>
       </div>
     </div>
 
@@ -396,7 +406,7 @@
           <!-- área rolável (altura = card de datas ao lado) -->
           <div id="gridScroll" class="js-grid-scroll">
             <!-- grid interno responsivo: sm:2 · md:3 · xl:5 colunas (1fr cada) -->
-            <div id="grid" class="grid gap-x-4 gap-y-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5"></div>
+            <div id="grid" class="js-grid grid gap-x-4 gap-y-2"></div>
           </div>
           <!-- dica de primeira visita (some ao rolar) -->
           <div id="verMais" class="ver-mais" hidden>Ver mais</div>
