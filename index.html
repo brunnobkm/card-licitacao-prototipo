@@ -296,19 +296,6 @@
 </head>
 <body class="bg-[#f6f6f6] min-h-screen flex flex-col items-center p-8 gap-4">
 
-  <!-- legenda explicativa -->
-  <div class="legend max-w-[1380px] w-full flex flex-wrap items-center gap-x-5 gap-y-1">
-    <span>Passe o mouse na propriedade → grupo de ícones</span>
-    <span>·</span>
-    <span><b>✏️ Lápis</b> edita</span>
-    <span>·</span>
-    <span><b>↗</b> abre o trecho no edital (verde = vinculado)</span>
-    <span>·</span>
-    <span><b>⧉ Copiar</b> o valor</span>
-    <span>·</span>
-    <span>Clicar no valor/card → abre o edital</span>
-  </div>
-
   <!-- demo: campos opcionais que viriam das Configurações (por padrão ocultos) -->
   <div class="legend max-w-[1380px] w-full flex flex-wrap items-center gap-x-4 gap-y-1">
     <span><b>Campos opcionais</b> (viriam das Configurações, ainda em dev):</span>
@@ -574,9 +561,13 @@
     // valores longos: expõe o texto inteiro no hover (nativo), já que o .value-trunc corta
     const titleAttr = (!empty && String(p.value).length > 24) ? ` title="${esc(p.value)}"` : '';
     const href = LINK_URLS[p.key];
-    // Portal de disputa (e outros com URL) vira hyperlink; demais continuam texto simples.
+    // Portal de disputa (e outros com URL) vira hyperlink com ícone ↗ de "abre em outra página"
+    // (mesmo do menu do globo). O texto (prop-value) é o que o lápis edita; demais campos = texto simples.
     const valueEl = href
-      ? `<a class="prop-value prop-link value-trunc placeholder text-[14px] font-normal leading-5" href="${href}" target="_blank" rel="noopener" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}"${titleAttr}>${display}</a>`
+      ? `<a class="prop-link flex items-center gap-1 min-w-0" href="${href}" target="_blank" rel="noopener">
+           <span class="prop-value value-trunc placeholder text-[14px] font-normal leading-5" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}"${titleAttr}>${display}</span>
+           <i data-lucide="external-link" class="link-out size-3.5 shrink-0"></i>
+         </a>`
       : `<span class="prop-value value-trunc placeholder text-[14px] font-normal leading-5 ${valCls}${roCursor}" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}"${titleAttr}>${display}</span>`;
     return `
       <div class="prop-field group grid gap-1 min-w-0">
