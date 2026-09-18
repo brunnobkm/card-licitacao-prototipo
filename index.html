@@ -222,6 +222,9 @@
   }
   .pop-item:hover { background: rgba(15,15,15,.05); }
   .link-out { color: #3A9B9E; }   /* seta de "abrir link do edital em outra página" no verde da marca */
+  /* propriedade renderizada como hyperlink (ex.: Portal de disputa) */
+  .prop-link { color: #3A9B9E; cursor: pointer; }
+  .prop-link:hover { text-decoration: underline; }
   .pop-item .check { margin-left: auto; opacity: 0; color: #3A9B9E; display: inline-flex; }
   .pop-item.selected .check { opacity: 1; }
   .pop-empty { padding: 10px 8px; font-size: 13px; color: rgba(15,15,15,.4); text-align: center; }
@@ -304,6 +307,13 @@
     <span><b>⧉ Copiar</b> o valor</span>
     <span>·</span>
     <span>Clicar no valor/card → abre o edital</span>
+  </div>
+
+  <!-- demo: campos opcionais que viriam das Configurações (por padrão ocultos) -->
+  <div class="legend max-w-[1380px] w-full flex flex-wrap items-center gap-x-4 gap-y-1">
+    <span><b>Campos opcionais</b> (viriam das Configurações, ainda em dev):</span>
+    <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" data-optfield="locacao"> Locação x Aquisição</label>
+    <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" data-optfield="prazoimpugnacao"> Prazo de impugnação</label>
   </div>
 
   <!-- ===================== CARD ===================== -->
@@ -460,7 +470,14 @@
       { label:'PNCP',   sub:'Portal Nacional de Contratações Públicas', icon:'globe' },
       { label:'BBMnet', sub:'plataforma de licitações',                 icon:'globe' },
     ],
+    // Campos opcionais do grid: só aparecem se ligados nas Configurações (área ainda em dev).
+    // Por padrão desligados/ocultos. Portal, Local de entrega, Requerimento de amostra e
+    // Possibilidade de consórcio NÃO entram aqui: são sempre visíveis.
+    checklistConfig: { locacao: false, prazoimpugnacao: false },
   };
+
+  // propriedades exibidas como hyperlink (texto = nome, abre em nova aba). Edição inline segue text.
+  const LINK_URLS = { portal: 'https://www.gov.br/compras' };
 
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -556,11 +573,16 @@
     const roCursor = !editable ? ' cursor-default' : '';
     // valores longos: expõe o texto inteiro no hover (nativo), já que o .value-trunc corta
     const titleAttr = (!empty && String(p.value).length > 24) ? ` title="${esc(p.value)}"` : '';
+    const href = LINK_URLS[p.key];
+    // Portal de disputa (e outros com URL) vira hyperlink; demais continuam texto simples.
+    const valueEl = href
+      ? `<a class="prop-value prop-link value-trunc placeholder text-[14px] font-normal leading-5" href="${href}" target="_blank" rel="noopener" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}"${titleAttr}>${display}</a>`
+      : `<span class="prop-value value-trunc placeholder text-[14px] font-normal leading-5 ${valCls}${roCursor}" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}"${titleAttr}>${display}</span>`;
     return `
       <div class="prop-field group grid gap-1 min-w-0">
         <span class="text-[14px] font-semibold leading-5 text-cardfg truncate">${esc(p.label)}</span>
         <div class="prop-row flex items-center min-w-0 relative"${roTip}>
-          <span class="prop-value value-trunc placeholder text-[14px] font-normal leading-5 ${valCls}${roCursor}" data-placeholder="${ph}" data-field="${p.key}" data-scope="${opts.scope}"${titleAttr}>${display}</span>
+          ${valueEl}
           <div class="prop-actions">${pillHtml(p.key, p.label, opts.scope, editable)}</div>
         </div>
       </div>`;
@@ -591,11 +613,14 @@
   }
 
   function renderGrid() {
-    const el = document.getElementById('grid');
-    // ordem row-major: em xl (5 col) cai 5+5+1; a coluna fica = par cima/baixo do Figma
-    const order = ['id','julgamento','portal','estado','capagest','modalidade','uasg','cidade','capagmun','habitantes','nova','locacao','amostra','consorcio','prazoimpugnacao','localentrega'];
+    // 'locacao' e 'prazoimpugnacao' são OPCIONAIS: só aparecem se ligados em state.checklistConfig
+    // (viriam das Configurações). Os demais são sempre visíveis.
+    const base = ['id','julgamento','portal','estado','capagest','modalidade','uasg','cidade','capagmun','habitantes','nova','locacao','amostra','consorcio','prazoimpugnacao','localentrega'];
+    const order = base.filter(k => (k in state.checklistConfig) ? state.checklistConfig[k] : true);
     const byKey = Object.fromEntries(state.props.map(p => [p.key, p]));
-    el.innerHTML = order.map(k => field(byKey[k], {scope:'props'})).join('');
+    const html = order.map(k => field(byKey[k], {scope:'props'})).join('');
+    // renderiza em todos os grids da página (card principal + clone), pra config refletir nos dois
+    document.querySelectorAll('.js-grid').forEach(el => { el.innerHTML = html; });
     safeIcons();
   }
 
@@ -926,6 +951,10 @@
     const copy = e.target.closest('[data-copy-field]');
     if (copy) { e.stopPropagation(); copyValue(copy); return; }
 
+    // 1.05) hyperlink de propriedade (ex.: Portal) → abre a URL (nova aba), não navega o card.
+    // Edição continua pelo lápis; aqui só evita o clique bolha virar navegação do card.
+    if (e.target.closest('a.prop-link') && !e.target.closest('a.prop-link').isContentEditable) { e.stopPropagation(); return; }
+
     // 1.1) lápis → habilita edição da propriedade (gatilho de edição)
     const pencil = e.target.closest('[data-edit]');
     if (pencil) {
@@ -1061,6 +1090,15 @@
   });
   window.addEventListener('resize', adjustAllGrids);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(adjustAllGrids);
+
+  // demo: liga/desliga campos opcionais (viriam das Configurações) e re-renderiza os dois cards
+  document.querySelectorAll('[data-optfield]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      state.checklistConfig[cb.dataset.optfield] = cb.checked;
+      renderGrid();
+      adjustAllGrids();
+    });
+  });
 
   // ---- segundo card na página: clona o principal (snapshot) e deixa só o globo do
   //      cenário "1 link → abre direto". O card principal continua como "multi" (dropdown). ----
