@@ -571,11 +571,14 @@
 
   function renderDatas() {
     const el = document.getElementById('datas');
-    const col1 = state.datas.filter(d => d.key !== 'atualizada');
-    const col2 = state.datas.filter(d => d.key === 'atualizada');
     const colorOf = (d) => d.key === 'envio' ? getDateColor(d.value) : 'normal';
-    const colHtml = (arr) => `<div class="flex flex-col gap-3">${arr.map(d => field(d, { color: colorOf(d), scope:'datas' })).join('')}</div>`;
-    el.innerHTML = colHtml(col1) + colHtml(col2);
+    // 3 datas empilhadas numa única coluna → card de datas com 3 linhas de altura
+    // (referência usada pelo adjustGridScroll pra altura visível do grid de propriedades)
+    const ordem = ['adicionada', 'atualizada', 'envio'];
+    const byKey = Object.fromEntries(state.datas.map(d => [d.key, d]));
+    const itens = ordem.map(k => byKey[k]).filter(Boolean)
+      .map(d => field(d, { color: colorOf(d), scope: 'datas' })).join('');
+    el.innerHTML = `<div class="flex flex-col gap-3">${itens}</div>`;
     safeIcons();
   }
 
